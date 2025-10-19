@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # --------------------------------------------------------------
-# StreamifyFB - Facebook Video Downloader Bot with URL Resolution and Owner-Restricted Uptime
+# StreamifyFB - Facebook Video Downloader Bot with Improved URL Normalization and Owner-Restricted Uptime
 # Powered by Bhadresh Tech
 # © 2025 Bhadresh Tech. All rights reserved.
 # --------------------------------------------------------------
@@ -32,13 +32,25 @@ def home():
 
 def normalize_url(url):
     url = url.strip()
+    
+    # Add scheme if missing
     parsed = urlparse(url)
     if not parsed.scheme:
         url = "https://" + url
         parsed = urlparse(url)
+    
+    netloc = parsed.netloc
+    path = parsed.path
+    # If netloc is empty but path exists, treat path as netloc
+    if not netloc and path:
+        netloc = path
+        path = ''
+    
     scheme = parsed.scheme.lower()
-    netloc = parsed.netloc.lower()
-    normalized_url = urlunparse((scheme, netloc, parsed.path, parsed.params, parsed.query, ''))
+    netloc = netloc.lower()
+    
+    # Rebuild URL without fragment
+    normalized_url = urlunparse((scheme, netloc, path, parsed.params, parsed.query, ''))
     return normalized_url
 
 @bot.message_handler(commands=['start'])
@@ -46,7 +58,7 @@ def send_welcome(message):
     welcome_text = (
         "👋 Welcome to StreamifyFB!\n"
         "Send me a Facebook video link to download.\n"
-        "Other platforms downloads are coming soon. Stay tuned!"
+        "Other platform downloads are coming soon. Stay tuned!"
     )
     bot.reply_to(message, welcome_text)
 
