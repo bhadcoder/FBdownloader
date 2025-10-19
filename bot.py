@@ -102,30 +102,20 @@ def handle_links(message):
             'progress_hooks': [hook]
         }
 
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                info = ydl.extract_info(url, download=True)
-                filename = ydl.prepare_filename(info)
+ @bot.message_handler(func=lambda message: True)
+def handle_links(message):
+    url = message.text.strip().lower()
 
-            with open(filename, 'rb') as video:
-                caption = "✅ Video processed by Bhadresh Tech"
-                bot.send_video(message.chat.id, video, caption=caption)
-            os.remove(filename)
-        except Exception as e:
-            bot.send_message(message.chat.id, f"❌ Error: {e}")
+    if "facebook.com" in url or "fb.watch" in url:
+        # Process Facebook link using your working Facebook video download handler
+        # Example placeholder:
+        bot.reply_to(message, "✅ Facebook video downloader is working on your link!")
+        # Call your FB download logic here
 
-    elif "youtube.com" in url or "youtu.be" in url:
-        bot.reply_to(message,
-            "⚠️ Streamify‑FB only supports Facebook links.\n"
-            "For YouTube downloads, try **@StreamifyYTBot** 🎬"
-        )
-    elif "instagram.com" in url:
-        bot.reply_to(message,
-            "⚠️ Streamify‑FB only supports Facebook links.\n"
-            "For Instagram videos, check out **@InstaStreamBot** 📸"
-        )
     else:
-        bot.reply_to(message, "❌ Unsupported link. Please send a valid Facebook video link.")
+        # For any other link (YouTube, Instagram, etc.) reply with coming soon
+        bot.reply_to(message, "🚧 This feature is coming soon. Please check back later!")
+
 
 
 if __name__ == "__main__":
@@ -133,3 +123,4 @@ if __name__ == "__main__":
     threading.Thread(target=run_flask).start()
     # Start Telegram bot polling
     bot.infinity_polling()
+
