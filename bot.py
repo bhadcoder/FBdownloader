@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # --------------------------------------------------------------
-# StreamifyFB - Facebook Video Downloader Bot with Coming Soon Placeholder for Other Platforms
+# StreamifyFB - Facebook Video Downloader Bot with URL Resolution and Owner-Restricted Uptime
 # Powered by Bhadresh Tech
 # © 2025 Bhadresh Tech. All rights reserved.
 # --------------------------------------------------------------
@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import datetime
 import threading
 from flask import Flask
+from urllib.parse import urlparse, urlunparse
 
 # Load environment variables
 load_dotenv()
@@ -28,6 +29,17 @@ app = Flask(__name__)
 @app.route('/')
 def home():
     return "StreamifyFB Bot is running. Facebook download active; other platforms coming soon."
+
+def normalize_url(url):
+    url = url.strip()
+    parsed = urlparse(url)
+    if not parsed.scheme:
+        url = "https://" + url
+        parsed = urlparse(url)
+    scheme = parsed.scheme.lower()
+    netloc = parsed.netloc.lower()
+    normalized_url = urlunparse((scheme, netloc, parsed.path, parsed.params, parsed.query, ''))
+    return normalized_url
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
@@ -52,7 +64,12 @@ def send_uptime(message):
 
 @bot.message_handler(func=lambda message: True)
 def handle_links(message):
-    url = message.text.strip().lower()
+    raw_url = message.text
+    try:
+        url = normalize_url(raw_url)
+    except Exception:
+        bot.reply_to(message, "❌ Invalid URL format. Please send a valid link.")
+        return
 
     if "facebook.com" in url or "fb.watch" in url:
         ydl_opts = {
@@ -73,7 +90,7 @@ def handle_links(message):
         except Exception as e:
             bot.send_message(message.chat.id, f"❌ Error: {e}")
     else:
-        bot.reply_to(message, "🚧 This download feature for this platform is coming soon! Please check back later.")
+        bot.reply_to(message, "❌ Sorry, this bot currently only supports Facebook video links.")
 
 if __name__ == "__main__":
     threading.Thread(target=lambda: app.run(host='0.0.0.0', port=5000)).start()
