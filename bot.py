@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # --------------------------------------------------------------
-# Streamify-FB Telegram Video Downloader Bot - Smart Edition
+# Streamify-FB Telegram Video Downloader Bot with Flask server
 # Powered by Bhadresh Tech
 # © 2025 Bhadresh Tech. All rights reserved.
 # --------------------------------------------------------------
@@ -11,6 +11,8 @@ import telebot
 from dotenv import load_dotenv
 import datetime
 import requests
+from flask import Flask
+import threading
 
 # Load environment variables
 load_dotenv()
@@ -21,6 +23,16 @@ bot = telebot.TeleBot(BOT_TOKEN)
 DOWNLOAD_DIR = "downloads"
 os.makedirs(DOWNLOAD_DIR, exist_ok=True)
 start_time = datetime.datetime.now()
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    return "Streamify-FB Bot is running!"
+
+def run_flask():
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port)
 
 def progress_update(d, msg):
     if d['status'] == 'downloading':
@@ -115,4 +127,9 @@ def handle_links(message):
     else:
         bot.reply_to(message, "❌ Unsupported link. Please send a valid Facebook video link.")
 
-bot.infinity_polling()
+
+if __name__ == "__main__":
+    # Start Flask server in a separate thread
+    threading.Thread(target=run_flask).start()
+    # Start Telegram bot polling
+    bot.infinity_polling()
